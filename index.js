@@ -29,11 +29,16 @@ async function run() {
       // Send a ping to confirm a successful connection
       
       const database = client.db('RedHopeDB')
-      const userCollections = database.collection('user')
+    const userCollections = database.collection('user')
+    const donationReqCol = database.collection('donationReqCol')
+    
 
+
+    //  Registered User Info storing
       app.post('/users', async (req, res) => {
           const userInfo = req.body;
           userInfo.role = "donor";
+          userInfo.status = "active"
           userInfo.createdAt = new Date();
 
           const result = await userCollections.insertOne(userInfo);
@@ -41,6 +46,24 @@ async function run() {
           res.send(result)
 
       })
+
+
+      //   get api for user's email 
+      app.get('/users/role/:email', async (req, res) => {
+          const {email} = req.params
+          const query = { email: email }
+          const result = await userCollections.findOne(query)
+          console.log(result);
+          res.send(result)
+      })
+
+    // post create donation request 
+    app.post('/create-donaiton-request', async (req, res) => {
+      const data = req.body;
+      data.createdAt = new Date();
+      const result = await donationReqCol.insertOne(data)
+      res.send(result);
+    })
 
 
     await client.db("admin").command({ ping: 1 });
