@@ -71,14 +71,19 @@ async function run() {
       app.post('/users', async (req, res) => {
           const userInfo = req.body;
           userInfo.role = "donor";
-          userInfo.status = "active"
+          userInfo.status = "Active"
           userInfo.createdAt = new Date();
 
           const result = await userCollections.insertOne(userInfo);
 
           res.send(result)
-
       })
+    
+    // Get All Users
+    app.get('/users', verifyFBToken, async (req, res) => {
+      const result = await userCollections.find().toArray()
+      res.status(200).send(result)
+    })
 
 
       //   get api for user's email 
@@ -96,6 +101,16 @@ async function run() {
       data.createdAt = new Date();
       const result = await donationReqCol.insertOne(data)
       res.send(result);
+    })
+
+    // patch method for changeing status
+    app.patch('/update/user/status', verifyFBToken, async (req, res) => {
+      const { email, status } = req.query;
+      const query = { email: email };
+
+      const updateStatus = { $set: { status: status } }
+      const result = await userCollections.updateOne(query, updateStatus)
+      res.send(result)
     })
 
 
