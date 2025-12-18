@@ -5,6 +5,8 @@ const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 
 const app = express();
 const port = process.env.PORT || 5000;
+const stripe = require('stripe')(process.env.STRIPE);
+const crypto = require('crypto')
 
 
 // Middleware
@@ -13,6 +15,7 @@ app.use(express.json())
 
 
 const admin = require("firebase-admin");
+const { log } = require('console');
 const decoded = Buffer.from(process.env.FB_SERVICE_KEY, 'base64').toString('utf8')
 const serviceAccount = JSON.parse(decoded);
 
@@ -109,7 +112,10 @@ async function run() {
         .limit(size)
         .skip(size*page)
         .toArray();
-      res.send(result)
+      
+      const totalRequest = await donationReqCol.countDocuments(query)
+      
+      res.send({request: result, totalRequest})
     })
 
     // post create donation request 
@@ -128,6 +134,41 @@ async function run() {
       const updateStatus = { $set: { status: status } }
       const result = await userCollections.updateOne(query, updateStatus)
       res.send(result)
+    })
+
+    // payment Stripe
+    app.post('/create-payment-checkout', async (req, res) => {
+      const information = req.body
+      const amount = parseInt(information.donateAmount) * 100
+      const donorName = information.donorName
+      const donorEmail = information.donorEmail
+      
+      const session = await stripe.checkout.sessions.create({
+        
+        line_items: [
+          {
+            price_data: {
+              currency: 'usd',
+              unit_amount: amount,
+              product_data: {
+                name: 'Donate'
+              }
+
+            },
+            quantity: 1,
+          },
+        ],
+        mode: 'payment',
+        metadata: {
+          donorName: donorName
+        },
+        customer_email: donorEmail,
+        success_url: `${process.env.SITE_DOMAIN}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${process.env.SITE_DOMAIN}/payment-cancelled`,
+      });
+
+      res.send({url: session.url})
+
     })
 
 
