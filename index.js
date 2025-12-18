@@ -67,6 +67,7 @@ async function run() {
     const database = client.db('RedHopeDB')
     const userCollections = database.collection('user')
     const donationReqCol = database.collection('donationReqCol')
+    const FundDonatorsList = database.collection('FundDonatorsList')
 
 
 
@@ -142,7 +143,11 @@ async function run() {
       const amount = parseInt(information.donateAmount) * 100
       const donorName = information.donorName
       const donorEmail = information.donorEmail
+      information.createdAt = new Date();
+
+      const result = await FundDonatorsList.insertOne(information)
       
+
       const session = await stripe.checkout.sessions.create({
         
         line_items: [
@@ -170,6 +175,18 @@ async function run() {
       res.send({url: session.url})
 
     })
+
+
+    // // Save Fund Donators Information (eita kaj kore nai try korchilam)
+    // app.post('/fund-donator-info', async (req, res) => {
+    //   const data = req.body
+    //   data.createdAt = new Date()
+    //   console.log(data);
+      
+    //   const result = await FundDonatorsList.insertOne(data);
+    //   res.send(result);
+
+    // })
 
 
     await client.db("admin").command({ ping: 1 });
