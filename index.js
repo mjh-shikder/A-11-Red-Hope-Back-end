@@ -26,10 +26,10 @@ const verifyFBToken = async (req, res, next) => {
   const token = req.headers.authorization;
 
   if (!token) {
-    return res.status(401).send({message: 'unauthorize access'})
+    return res.status(401).send({ message: 'unauthorize access' })
   }
 
-  try { 
+  try {
     const idToken = token.split(' ')[1]
     const decoded = await admin.auth().verifyIdToken(idToken)
     console.log('decodec info', decoded);
@@ -59,26 +59,24 @@ async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
-      // Send a ping to confirm a successful connection
-      
-      const database = client.db('RedHopeDB')
+    // Send a ping to confirm a successful connection
+
+    const database = client.db('RedHopeDB')
     const userCollections = database.collection('user')
     const donationReqCol = database.collection('donationReqCol')
-    
+
 
 
     //  Registered User Info storing
-      app.post('/users', async (req, res) => {
-          const userInfo = req.body;
-          userInfo.role = "donor";
-          userInfo.status = "Active"
-          userInfo.createdAt = new Date();
+    app.post('/users', async (req, res) => {
+      const userInfo = req.body;
+      userInfo.role = "donor";
+      userInfo.status = "Active"
+      userInfo.createdAt = new Date();
+      const result = await userCollections.insertOne(userInfo);
+      res.send(result)
+    })
 
-          const result = await userCollections.insertOne(userInfo);
-
-          res.send(result)
-      })
-    
     // Get All Users
     app.get('/users', verifyFBToken, async (req, res) => {
       const result = await userCollections.find().toArray()
@@ -86,14 +84,33 @@ async function run() {
     })
 
 
-      //   get api for user's email 
-      app.get('/users/role/:email', async (req, res) => {
-          const {email} = req.params
-          const query = { email: email }
-          const result = await userCollections.findOne(query)
-          console.log(result);
-          res.send(result)
-      })
+    //   get api for user's email 
+    app.get('/users/role/:email', async (req, res) => {
+      const { email } = req.params
+      const query = { email: email }
+      const result = await userCollections.findOne(query)
+      console.log(result);
+      res.send(result)
+    })
+
+    // get my donation request 
+    app.get('/my-donation-request', verifyFBToken, async (req, res) => {
+      const emial = req.decoded_email;
+      // const limit = Number(req.query.limit)
+      // const skip = Number(req.query.skip)
+      const size = Number(req.query.size)
+      const page = Number(req.query.page)
+
+      const query = { requesterEmail: emial };
+
+
+      const result = await donationReqCol
+        .find(query)
+        .limit(size)
+        .skip(size*page)
+        .toArray();
+      res.send(result)
+    })
 
     // post create donation request 
     app.post('/create-donaiton-request', verifyFBToken, async (req, res) => {
@@ -124,11 +141,11 @@ async function run() {
 run().catch(console.dir);
 
 app.get('/', (req, res) => {
-    res.send('Hello world')
+  res.send('Hello world')
 })
 
 app.listen(port, () => {
-    console.log(`users server started on port: ${port}`);
+  console.log(`users server started on port: ${port}`);
 
 })
 
