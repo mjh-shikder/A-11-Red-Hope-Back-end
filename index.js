@@ -67,7 +67,7 @@ async function run() {
     const database = client.db('RedHopeDB')
     const userCollections = database.collection('user')
     const donationReqCol = database.collection('donationReqCol')
-    const FundDonatorsList = database.collection('FundDonatorsList')
+    const fundDonatorCollection = database.collection('fundDonators')
 
 
 
@@ -143,9 +143,9 @@ async function run() {
       const amount = parseInt(information.donateAmount) * 100
       const donorName = information.donorName
       const donorEmail = information.donorEmail
-      information.createdAt = new Date();
+      // information.createdAt = new Date();
 
-      const result = await FundDonatorsList.insertOne(information)
+      // const result = await FundDonatorsList.insertOne(information)
       
 
       const session = await stripe.checkout.sessions.create({
@@ -177,16 +177,32 @@ async function run() {
     })
 
 
-    // // Save Fund Donators Information (eita kaj kore nai try korchilam)
-    // app.post('/fund-donator-info', async (req, res) => {
-    //   const data = req.body
-    //   data.createdAt = new Date()
-    //   console.log(data);
-      
-    //   const result = await FundDonatorsList.insertOne(data);
-    //   res.send(result);
+    // Save Fund Donators Information 
+    app.post('/success-payment', async (req, res) => {
+      const { session_id } = req.query;
+      console.log(session_id);
+      const session = await stripe.checkout.sessions.retrieve(session_id);
+      console.log(session);
 
-    // })
+      const transactionId = session.payment_intent;
+
+
+
+      if (session.payment_status == 'paid') {
+        const paymentInfo = {
+          amount: session.amount_total/100,
+          currency: session.currency,
+          donorEmail: session.customer_email,
+          transactionId,
+          time: new Date(),
+
+        }
+
+        const result = await fundDonatorCollection.insertOne(paymentInfo)
+        return res.send(result)
+      }
+
+    })
 
 
     await client.db("admin").command({ ping: 1 });
