@@ -35,7 +35,7 @@ const verifyFBToken = async (req, res, next) => {
   try {
     const idToken = token.split(' ')[1]
     const decoded = await admin.auth().verifyIdToken(idToken)
-    console.log('decodec info', decoded);
+   // console.log('decodec info', decoded);
     req.decoded_email = decoded.email;
     next()
   }
@@ -93,7 +93,7 @@ async function run() {
       const { email } = req.params
       const query = { email: email }
       const result = await userCollections.findOne(query)
-      console.log(result);
+     // console.log(result);
       res.send(result)
     })
 
@@ -111,12 +111,12 @@ async function run() {
       const result = await donationReqCol
         .find(query)
         .limit(size)
-        .skip(size*page)
+        .skip(size * page)
         .toArray();
-      
+
       const totalRequest = await donationReqCol.countDocuments(query)
-      
-      res.send({request: result, totalRequest})
+
+      res.send({ request: result, totalRequest })
     })
 
     // post create donation request 
@@ -146,10 +146,10 @@ async function run() {
       // information.createdAt = new Date();
 
       // const result = await FundDonatorsList.insertOne(information)
-      
+
 
       const session = await stripe.checkout.sessions.create({
-        
+
         line_items: [
           {
             price_data: {
@@ -172,7 +172,7 @@ async function run() {
         cancel_url: `${process.env.SITE_DOMAIN}/payment-cancelled`,
       });
 
-      res.send({url: session.url})
+      res.send({ url: session.url })
 
     })
 
@@ -180,9 +180,9 @@ async function run() {
     // Save Fund Donators Information 
     app.post('/success-payment', async (req, res) => {
       const { session_id } = req.query;
-      console.log(session_id);
+     // console.log(session_id);
       const session = await stripe.checkout.sessions.retrieve(session_id);
-      console.log(session);
+     // console.log(session);
 
       const transactionId = session.payment_intent;
 
@@ -190,7 +190,7 @@ async function run() {
 
       if (session.payment_status == 'paid') {
         const paymentInfo = {
-          amount: session.amount_total/100,
+          amount: session.amount_total / 100,
           currency: session.currency,
           donorEmail: session.customer_email,
           transactionId,
@@ -202,6 +202,34 @@ async function run() {
         return res.send(result)
       }
 
+    })
+
+
+    // get search with filters
+    app.get('/search', async (req, res) => {
+      const { bloodGroup, recipientDistrict, recipientUpazila } = req.query;
+      
+
+      const query = {};
+      if (!query) {
+        return;
+      }
+      if (bloodGroup) {
+        query.bloodGroup = bloodGroup.replace(/ /g, "+").trim();
+      }
+      if (recipientDistrict) {
+        query.recipientDistrict = recipientDistrict
+      }
+      if (recipientUpazila) {
+        query.recipientUpazila = recipientUpazila
+      }
+
+      console.log(query);
+      
+      const result = await donationReqCol.find(query).toArray();
+      res.send(result)
+      
+      
     })
 
 
