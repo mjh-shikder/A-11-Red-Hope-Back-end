@@ -35,7 +35,7 @@ const verifyFBToken = async (req, res, next) => {
   try {
     const idToken = token.split(' ')[1]
     const decoded = await admin.auth().verifyIdToken(idToken)
-   // console.log('decodec info', decoded);
+    // console.log('decodec info', decoded);
     req.decoded_email = decoded.email;
     next()
   }
@@ -93,7 +93,7 @@ async function run() {
       const { email } = req.params
       const query = { email: email }
       const result = await userCollections.findOne(query)
-     // console.log(result);
+      // console.log(result);
       res.send(result)
     })
 
@@ -180,9 +180,9 @@ async function run() {
     // Save Fund Donators Information 
     app.post('/success-payment', async (req, res) => {
       const { session_id } = req.query;
-     // console.log(session_id);
+      // console.log(session_id);
       const session = await stripe.checkout.sessions.retrieve(session_id);
-     // console.log(session);
+      // console.log(session);
 
       const transactionId = session.payment_intent;
 
@@ -205,31 +205,43 @@ async function run() {
     })
 
 
+    // Get Pending Donation request
+    app.get('/pending-donations', verifyFBToken, async (req, res) => {
+     
+
+      const query = { donationStatus: "pending" }
+      
+      const result = await donationReqCol.find(query).toArray()
+      
+      res.send(result)
+      
+    })
+
     // get search with filters
     app.get('/search', async (req, res) => {
       const { bloodGroup, recipientDistrict, recipientUpazila } = req.query;
-      
 
-      const query = {};
+
+      const query = {}
       if (!query) {
         return;
       }
       if (bloodGroup) {
-        query.bloodGroup = bloodGroup.replace(/ /g, "+").trim();
+        query.blood = bloodGroup.replace(/ /g, "+").trim();
       }
       if (recipientDistrict) {
-        query.recipientDistrict = recipientDistrict
+        query.district = recipientDistrict
       }
       if (recipientUpazila) {
-        query.recipientUpazila = recipientUpazila
+        query.upazila = recipientUpazila
       }
 
       console.log(query);
-      
-      const result = await donationReqCol.find(query).toArray();
+
+      const result = await userCollections.find(query).toArray();
       res.send(result)
-      
-      
+
+
     })
 
 
