@@ -15,7 +15,7 @@ app.use(express.json())
 
 
 const admin = require("firebase-admin");
-const { log } = require('console');
+const { log, error } = require('console');
 const decoded = Buffer.from(process.env.FB_SERVICE_KEY, 'base64').toString('utf8')
 const serviceAccount = JSON.parse(decoded);
 
@@ -126,6 +126,40 @@ async function run() {
       const result = await donationReqCol.insertOne(data)
       res.send(result);
     })
+
+
+    // Patch api User profile Update
+    app.patch('/users/update/:id', async (req, res) => {
+      try {
+        const { id } = req.params;
+
+        const {
+          
+          name,
+          mainPhotoUrl,
+          blood,
+          district,
+          upazila,
+        } = req.body;
+        const query = { _id: new ObjectId(id) };
+        const updateFieds = {};
+        if (name !== undefined) updateFieds.name = name;
+        if (mainPhotoUrl !== undefined) updateFieds.mainPhotoUrl = mainPhotoUrl;
+        if (blood !== undefined) updateFieds.blood = blood;
+        if (district !== undefined) updateFieds.district = district;
+        if (upazila !== undefined) updateFieds.upazila = upazila;
+
+        const updateDoc = { $set:  updateFieds  };
+        
+        console.log("updated docs:",updateDoc);
+        
+        const result = await userCollections.updateOne(query, updateDoc)
+        res.send(result)
+      } catch (error) {
+        res.status(500).send(error)
+      }
+    })
+
 
     // patch method for changeing status
     app.patch('/update/user/status', verifyFBToken, async (req, res) => {
