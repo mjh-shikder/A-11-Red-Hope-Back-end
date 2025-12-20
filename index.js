@@ -177,12 +177,12 @@ async function run() {
     })
 
 
-    // Save Fund Donators Information 
+    // Post Fund Donators Information 
     app.post('/success-payment', async (req, res) => {
       const { session_id } = req.query;
       // console.log(session_id);
       const session = await stripe.checkout.sessions.retrieve(session_id);
-      // console.log(session);
+       console.log(session);
 
       const transactionId = session.payment_intent;
 
@@ -193,6 +193,7 @@ async function run() {
           amount: session.amount_total / 100,
           currency: session.currency,
           donorEmail: session.customer_email,
+          donorName: session.metadata.donorName,
           transactionId,
           time: new Date(),
 
@@ -258,10 +259,13 @@ async function run() {
       const updateStatus = { $set: { donationStatus: "inprogress" } }
       const result = await donationReqCol.updateOne(query, updateStatus)
       
+      res.send(result)  
+    })
+
+    // Get List of Fund Donator
+    app.get('/fund-donators', async (req, res) => {
+      const result = await fundDonatorCollection.find().toArray()
       res.send(result)
-      
-      
-      
     })
 
 
