@@ -250,7 +250,19 @@ async function run() {
       res.send(result)
     })
 
-  
+    // Patch for updating the Status
+    app.patch('/update/donation/status', async (req, res) => {
+      const { _id } = req.query;
+      const query = { _id: new ObjectId(_id) }
+      
+      const updateStatus = { $set: { donationStatus: "inprogress" } }
+      const result = await donationReqCol.updateOne(query, updateStatus)
+      
+      res.send(result)
+      
+      
+      
+    })
 
 
     await client.db("admin").command({ ping: 1 });
