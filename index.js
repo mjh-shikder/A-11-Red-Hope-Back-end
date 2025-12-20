@@ -240,9 +240,17 @@ async function run() {
 
       const result = await userCollections.find(query).toArray();
       res.send(result)
-
-
     })
+
+    // Get Request for donation request details page
+    app.get('/donation-request-details/:_id', verifyFBToken, async (req, res) => {
+      const { _id } = req.params;
+      const query = { _id: new ObjectId(_id) }
+      const result = await donationReqCol.findOne(query)
+      res.send(result)
+    })
+
+  
 
 
     await client.db("admin").command({ ping: 1 });
