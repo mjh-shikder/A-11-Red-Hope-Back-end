@@ -151,7 +151,7 @@ async function run() {
 
         const updateDoc = { $set:  updateFieds  };
         
-        console.log("updated docs:",updateDoc);
+      //  console.log("updated docs:",updateDoc);
         
         const result = await userCollections.updateOne(query, updateDoc)
         res.send(result)
@@ -216,7 +216,7 @@ async function run() {
       const { session_id } = req.query;
       // console.log(session_id);
       const session = await stripe.checkout.sessions.retrieve(session_id);
-       console.log(session);
+     //  console.log(session);
 
       const transactionId = session.payment_intent;
 
@@ -271,7 +271,7 @@ async function run() {
         query.upazila = recipientUpazila
       }
 
-      console.log(query);
+   //   console.log(query);
 
       const result = await userCollections.find(query).toArray();
       res.send(result)
@@ -303,8 +303,8 @@ async function run() {
     })
 
 
-    await client.db("admin").command({ ping: 1 });
-    console.log("Pinged your deployment. You successfully connected to MongoDB!");
+    // await client.db("admin").command({ ping: 1 });
+    // console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
@@ -317,7 +317,7 @@ app.get('/', (req, res) => {
 })
 
 app.listen(port, () => {
-  console.log(`users server started on port: ${port}`);
+  // console.log(`users server started on port: ${port}`);
 
 })
 
