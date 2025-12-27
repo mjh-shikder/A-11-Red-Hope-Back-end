@@ -241,7 +241,7 @@ async function run() {
 
 
     // Get Pending Donation request
-    app.get('/pending-donations', verifyFBToken, async (req, res) => {
+    app.get('/pending-donations', async (req, res) => {
      
 
       const query = { donationStatus: "pending" }
